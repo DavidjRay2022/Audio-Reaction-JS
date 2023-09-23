@@ -1,36 +1,48 @@
-const button1 = document.getElementById('button1');
-let audio1 = new Audio();  //AudioSourceFeatuerLocation1
-const audioCtx = new AudioContext(); //Web Audio API
-console.log(audioCtx);
+const container = document.getElementById('container');
+const canvas = document.getElementById('canvas1');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const ctx = canvas.getContext('2d');
+let audioSource;
+let analyser;
+
+container.addEventListener('click', function() {
+//    let audio1 = new Audio();  //AudioSourceFeatuerLocation1
+    //audio1.src = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+    let audio1 = document.getElementById('audio1');
+    audio1.src = "Hysteria - Premaster - (-6db).wav";
+    const audioCtx = new AudioContext(); //Web Audio API
+
+  audio1.play();
+    audioSource = audioCtx.createMediaElementSource(audio1);
+    analyser = audioCtx.createAnalyser();
+    audioSource.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    analyser.fftSize = 64;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
 
 
-//AUDIO SOURCE
-audio1.src='Hysteria - Premaster - (-6db).wav';
+    const barWidth = canvas.width / bufferLength;
+    let barHeight;
+    let x = 0;
+   
 
-button1.addEventListener('click', function(){
-    if(audio1.paused){
-        audio1.play();
-    }else{
-        audio1.pause();
+
+    
+function animate(){
+    x=0
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    analyser.getByteFrequencyData(dataArray);
+    for (let i = 0; i < bufferLength; i++) {
+        barHeight = dataArray[i];
+        ctx.fillStyle= 'white';
+        ctx.fillRect(x, canvas.height - barHeight,barWidth, barHeight);
+        x += barWidth;
     }
-    audio1.addEventListener('playing', function(){
-        console.log("Audio 1 started playing!");
-    });
-    audio1.addEventListener('ended', function(){
-        console.log("Audio 1 ended!");
-    })
-    audio1.addEventListener('pause', function(){
-        console.log("Audio 1 paused!");
-    })
-})
-//Web Audio API
-const button2 = document.getElementById('button2');
-button2.addEventListener('click', playSound);
-function playSound(){
-    const oscillator = audioCtx.createOscillator();
-    oscillator.connect(audioCtx.destination);
-    oscillator.type='triangle';
-    oscillator.start();
-    setTimeout(function(){
-       oscillator.stop()}, 500);
+    requestAnimationFrame(animate);
 }
+animate();
+
+});
+
